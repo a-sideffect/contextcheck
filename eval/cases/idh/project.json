@@ -1,0 +1,15 @@
+{
+  "claim": "PI 1.8, HRV 24, dPVi 23.53 percent and RBV 6.5 percent per hour can be used as IDH alarm thresholds in our monitor.",
+  "goal": "Improve IDH early-warning reliability with a cheap sensor",
+  "hardware": ["MAX30102 optical sensor", "ESP32-C3", "BMI160 IMU"],
+  "dimensions": [
+    {"name": "Population", "weight": 3, "project_value": "Maintenance HD"},
+    {"name": "Clinical setting", "weight": 2, "project_value": "In-centre"},
+    {"name": "Sensor and wavelengths", "weight": 3, "project_value": "MAX30102 red/IR"},
+    {"name": "Measurement site", "weight": 1, "project_value": "Hand"},
+    {"name": "Outcome definition", "weight": 3, "project_value": "IDH, to define"},
+    {"name": "Protocol and timing", "weight": 2, "project_value": "To define"},
+    {"name": "Validation type", "weight": 2, "project_value": "Own recordings"},
+    {"name": "Performance level", "weight": 1, "project_value": "Reliable cheap alarm"}
+  ]
+}

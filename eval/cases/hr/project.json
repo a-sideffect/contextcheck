@@ -1,0 +1,13 @@
+{
+  "claim": "Our MAX30102 can measure resting heart rate as accurately as fingertip PPG studies checked against ECG.",
+  "goal": "Show a reliable resting heart rate",
+  "hardware": ["MAX30102 optical sensor", "ESP32-C3", "BMI160 IMU"],
+  "dimensions": [
+    {"name": "Sensor and wavelengths", "weight": 3, "project_value": "MAX30102 red/IR"},
+    {"name": "Measurement site", "weight": 2, "project_value": "Finger"},
+    {"name": "Subject state", "weight": 2, "project_value": "At rest"},
+    {"name": "Reference method", "weight": 2, "project_value": "None yet"},
+    {"name": "Quantity measured", "weight": 3, "project_value": "Heart rate"},
+    {"name": "Calibration needed", "weight": 3, "project_value": "None available"}
+  ]
+}

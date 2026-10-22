@@ -1,0 +1,82 @@
+{
+  "papers": [
+    {
+      "doi": "10.2196/mhealth.7275",
+      "id": "p560aeb66",
+      "short": "Yan 2017",
+      "title": "Resting and Postexercise Heart Rate Detection From Fingertip and Facial Photoplethysmography Using a Smartphone Camera: A Validation Study.",
+      "text_source": "full text",
+      "dims": [
+        {
+          "dimension": "Sensor and wavelengths",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Measurement site",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Subject state",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Reference method",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Quantity measured",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Calibration needed",
+          "gold_state": "",
+          "gold_quote": ""
+        }
+      ]
+    },
+    {
+      "doi": "10.1038/s41746-020-0226-6",
+      "id": "p5587914d",
+      "short": "Bent 2020",
+      "title": "Investigating sources of inaccuracy in wearable optical heart rate sensors.",
+      "text_source": "full text",
+      "dims": [
+        {
+          "dimension": "Sensor and wavelengths",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Measurement site",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Subject state",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Reference method",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Quantity measured",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Calibration needed",
+          "gold_state": "",
+          "gold_quote": ""
+        }
+      ]
+    }
+  ]
+}

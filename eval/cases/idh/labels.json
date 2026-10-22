@@ -1,0 +1,151 @@
+{
+  "papers": [
+    {
+      "doi": "10.1186/s12871-019-0917-1",
+      "id": "pef8a2e5b",
+      "short": "Mostafa 2019",
+      "title": "Evaluation of peripheral perfusion index and heart rate variability as early predictors for intradialytic hypotension in critically ill patients.",
+      "text_source": "full text",
+      "dims": [
+        {
+          "dimension": "Population",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Clinical setting",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Sensor and wavelengths",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Measurement site",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Outcome definition",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Protocol and timing",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Validation type",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Performance level",
+          "gold_state": "",
+          "gold_quote": ""
+        }
+      ]
+    },
+    {
+      "doi": "10.1186/s12882-026-04883-4",
+      "id": "p50a82b9d",
+      "short": "Li 2026",
+      "title": "The value of pleth variability index in predicting hypotension during maintenance hemodialysis: a prospective observational multicenter study (PVi-HD study).",
+      "text_source": "full text",
+      "dims": [
+        {
+          "dimension": "Population",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Clinical setting",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Sensor and wavelengths",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Measurement site",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Outcome definition",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Protocol and timing",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Validation type",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Performance level",
+          "gold_state": "",
+          "gold_quote": ""
+        }
+      ]
+    },
+    {
+      "doi": "10.1186/s12882-021-02481-0",
+      "id": "pc4ce7c67",
+      "short": "Chaudhuri 2021",
+      "title": "Real-time prediction of intradialytic relative blood volume: a proof-of-concept for integrated cloud computing infrastructure.",
+      "text_source": "full text",
+      "dims": [
+        {
+          "dimension": "Population",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Clinical setting",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Sensor and wavelengths",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Measurement site",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Outcome definition",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Protocol and timing",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Validation type",
+          "gold_state": "",
+          "gold_quote": ""
+        },
+        {
+          "dimension": "Performance level",
+          "gold_state": "",
+          "gold_quote": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# One DOI per line. Aim for 10 to 20 papers across the cases so the metrics mean something.
+10.1186/s12871-019-0917-1
+10.1186/s12882-026-04883-4
+10.1186/s12882-021-02481-0

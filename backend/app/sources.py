@@ -62,9 +62,13 @@ def _openalex_abstract(inv: Optional[dict]) -> str:
     return " ".join(words[i] for i in sorted(words))
 
 
-def _openalex(query: str, n: int) -> List[dict]:
-    params = {"search": query, "per-page": n,
+def _openalex(query: str, n: int, extra: Optional[dict] = None) -> List[dict]:
+    params = {"per-page": n,
               "select": "id,doi,title,publication_year,primary_location,authorships,open_access,abstract_inverted_index"}
+    if query:
+        params["search"] = query
+    if extra:
+        params.update(extra)
     if os.getenv("OPENALEX_API_KEY"):
         params["api_key"] = os.getenv("OPENALEX_API_KEY")
     r = httpx.get(OPENALEX, params=params, timeout=30)
@@ -139,3 +143,21 @@ def cached_text(paper_id: str) -> Optional[Dict[str, str]]:
     """Text saved by the plan step, or None if that paper was never fetched."""
     f = _cache() / (paper_id + ".json")
     return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
+
+
+def by_doi(doi: str) -> Optional[dict]:
+    """Look one paper up by DOI: Europe PMC first (gives PMC full text), then OpenAlex."""
+    doi = doi.strip().lower().replace("https://doi.org/", "")
+    try:
+        for p in _epmc('DOI:"%s"' % doi, 3):
+            if p["doi"] == doi:
+                return p
+    except (httpx.HTTPError, ValueError):
+        pass
+    try:
+        for p in _openalex("", 1, {"filter": "doi:https://doi.org/" + doi}):
+            if p["doi"] == doi:
+                return p
+    except (httpx.HTTPError, ValueError):
+        pass
+    return None
