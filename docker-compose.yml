@@ -1,0 +1,13 @@
+services:
+  contextcheck:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend/app:/srv/app          # live reload on code edits
+      - ./index_3.html:/srv/static/index.html:ro
+      - ./cache:/srv/cache              # cached API responses, keyed by DOI

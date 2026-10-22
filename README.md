@@ -56,3 +56,20 @@ OSI Hackathon 2026. Add team member names here.
 ## License
 
 No license has been chosen yet. Add a `LICENSE` file (for example MIT) before sharing the code for reuse.
+
+## Run with Docker
+
+```bash
+cp .env.example .env     # then add your keys
+docker compose up --build
+```
+
+Open http://localhost:8000. Check http://localhost:8000/api/health to see which keys are set.
+
+## Run without Docker
+
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -r backend/requirements.txt
+.venv/Scripts/python -m uvicorn app.main:app --app-dir backend --reload --port 8000
+```
