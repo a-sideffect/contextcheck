@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List
 
-from . import jobs, llm, plan
+from . import check, jobs, llm, plan
 
 # Local runs read .env from the repo root; in Docker, compose injects it.
 ROOT = Path(__file__).resolve().parents[2]
@@ -64,6 +64,16 @@ def api_plan(req: PlanReq):
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY is not set in .env")
     hw = [h.strip() for h in req.hardware if h.strip()][:60]
     jid = jobs.start(plan.STAGES, lambda pr: plan.build_plan(q, hw, pr))
+    return {"job": jid}
+
+
+@app.post("/api/check")
+def api_check(req: check.CheckReq):
+    if not os.getenv("GEMINI_API_KEY"):
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY is not set in .env")
+    if not req.papers or not req.dims:
+        raise HTTPException(status_code=400, detail="Nothing to check")
+    jid = jobs.start(check.STAGES, lambda pr: check.build_check(req, pr))
     return {"job": jid}
 
 

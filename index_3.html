@@ -141,6 +141,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .extra small{display:block;color:var(--muted);font-size:13px}
 .extra:empty::after{content:"Nothing extra needed for this check.";display:block;padding:12px 0;color:var(--muted)}
 
+.qt{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:4px}
+.qt span{font-style:normal;color:var(--match-t);margin-left:6px}
 /* pipeline ruler */
 .ruler{list-style:none;display:flex;margin:0;padding:0;flex:1}
 .ruler:empty{display:none}
@@ -689,6 +691,35 @@ function sendLive(q){
     .catch(function(e){fail(e.message||"Could not reach the backend.")});
 }
 
+function runLive(){
+  var t=TASKS.live,I=state.inputs;
+  function fail(msg){
+    state.running=false;$("run").disabled=false;$("steps2").innerHTML="";
+    $("results").innerHTML='<section class="sec" style="margin-top:48px"><p class="lead">'+esc(msg)+' Press Run check to try again.</p></section>';
+  }
+  var body={
+    claim:$("claim").value,goal:$("goal").value,hardware:I.hw,
+    dims:DIMS.live,ref:t.ref||[],extra:I.extra,qa:I.qa,
+    papers:I.sub.map(function(s,i){
+      var id=t.papers[i];
+      return {id:id,short:s.p.short,title:s.p.title||"",src:s.p.src||"",hw_name:s.p.hw.name,hw_v:s.v,hw_why:s.why,ans:s.ans};
+    })
+  };
+  fetch("/api/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(typeof j.detail==="string"?j.detail:"The backend refused the request.");return j})})
+    .then(function(j){
+      pollJob(j.job,$("steps2"),function(res){
+        Object.keys(res.papers).forEach(function(id){
+          var np=res.papers[id];delete np.hw;PAPERS[id]=Object.assign({},PAPERS[id],np);
+        });
+        t.lead=res.task.lead;t.actions=res.task.actions;t.gaps=res.task.gaps;
+        state.running=false;$("run").disabled=false;
+        renderResults();$("results").scrollIntoView({behavior:"smooth",block:"start"});
+      },fail);
+    })
+    .catch(function(e){fail(e.message||"Could not reach the backend.")});
+}
+
 function send(){
   if(state.running)return;
   var q=$("q").value.trim();$("err1").textContent="";
@@ -771,9 +802,9 @@ function score(p){
   return {s:den?Math.round(num/den*100):0,c:all?Math.round(den/all*100):0,unk:p.dims.filter(function(d){return d[0]==="unknown"}).length};
 }
 function qcls(p,name){var q=p.qty.filter(function(x){return x[0]===name})[0];return q?q[1]:null}
-function cap(base,cls){
+function cap(base,cls,validated){
   if(cls==="not")return "no";
-  if(cls==="local"&&base==="adopt")return "test";
+  if(base==="adopt"&&(cls==="local"||(cls&&validated===false)))return "test"; /* unvalidated can never be Adopt */
   return base;
 }
 function rank(f){return f[4]*f[5]*f[6]}
@@ -816,9 +847,9 @@ function renderResults(){
   h+='<section class="sec"><h2>Transfer ranking</h2><p class="cap">Table 1. Features ranked by benefit x feasibility x evidence. A verdict is capped when the quantity behind it is Not comparable or needs local calibration.</p>'
     +'<div class="tw"><table><thead><tr><th></th><th>Feature</th><th>Verdict</th><th>Evidence</th><th>Effort</th><th>Score</th></tr></thead><tbody>'
     +L.map(function(x,i){
-        var f=x.f,cls=f[9]?qcls(x.p,f[9]):null,v=cap(f[8],cls),capped=v!==f[8];
+        var f=x.f,cls=f[9]?qcls(x.p,f[9]):null,v=cap(f[8],cls,f[10]),capped=v!==f[8];
         return '<tr><td class="n">'+(i+1)+'</td><td><b>'+f[0]+'</b><small>'+x.p.short+'. Hardware: '+f[1]+'. '+f[2]+'</small></td>'
-          +'<td><span class="tag '+VERD[v][1]+'">'+VERD[v][0]+'</span>'+(capped?'<span class="capnote">Capped: quantity is '+CLS[cls][0]+'</span>':'')+'</td>'
+          +'<td><span class="tag '+VERD[v][1]+'">'+VERD[v][0]+'</span>'+(capped?'<span class="capnote">Capped: quantity is '+((cls==="not"||cls==="local")?CLS[cls][0]:'unvalidated')+'</span>':'')+'</td>'
           +'<td>'+f[3]+'</td><td>'+f[7]+'</td><td><span class="sc">'+rank(f).toFixed(2)+'</span><span class="bar" style="width:70px"><i style="transform:scaleX('+Math.min(rank(f)/1.8,1)+')"></i></span></td></tr>'}).join('')
     +'</tbody></table></div></section>';
 
@@ -847,14 +878,14 @@ function updateScores(){
 }
 function renderDetail(){
   var t=TASKS[state.task],p=PAPERS[state.paper],dn=DIMS[t.domain],s=score(p);
-  var usable=p.feat.filter(function(f){return cap(f[8],f[9]?qcls(p,f[9]):null)!=="no"}).length;
+  var usable=p.feat.filter(function(f){return cap(f[8],f[9]?qcls(p,f[9]):null,f[10])!=="no"}).length;
   $("detail").innerHTML=
    '<div class="dhead"><h2>'+p.short+'</h2><p>'+p.src+'</p></div>'
    +'<p class="cap" style="margin-top:6px">'+p.summary+' Closeness '+s.s+' at '+s.c+' percent confidence. '+usable+' of '+p.feat.length+' features usable.</p>'
    +'<div class="detail"><div><h4>Closeness by dimension</h4><ul class="dl">'
-   +p.dims.map(function(d,i){return '<li><span><span class="tag l-'+d[0]+'">'+LABELS[d[0]]+'</span></span><div><b>'+dn[i][0]+'</b><p>'+d[1]+'</p></div></li>'}).join('')
+   +p.dims.map(function(d,i){return '<li><span><span class="tag l-'+d[0]+'">'+LABELS[d[0]]+'</span></span><div><b>'+dn[i][0]+'</b><p>'+d[1]+'</p>'+(d[2]?'<p class="qt">&ldquo;'+esc(d[2])+'&rdquo; <span>quote checked against the paper</span></p>':'')+'</div></li>'}).join('')
    +'</ul></div><div><h4>Comparability of each quantity</h4><ul class="dl ql">'
-   +p.qty.map(function(q){return '<li><div class="top"><b>'+q[0]+'</b><span class="tag '+CLS[q[1]][1]+'">'+CLS[q[1]][0]+'</span></div><p>Broken on: '+q[2]+'. '+q[3]+'</p></li>'}).join('')
+   +p.qty.map(function(q){return '<li><div class="top"><b>'+q[0]+'</b><span class="tag '+CLS[q[1]][1]+'">'+CLS[q[1]][0]+'</span></div><p>Broken on: '+q[2]+'. '+q[3]+'</p>'+(q[4]?'<p class="qt">&ldquo;'+esc(q[4])+'&rdquo;</p>':'')+'</li>'}).join('')
    +'</ul><p class="cap" style="margin-top:14px">Class is set by rule. A differing instrument, algorithm or definition drops it below Direct. Unknown axes cap it.</p></div></div>';
 }
 function selectPaper(id){
@@ -866,13 +897,9 @@ function selectPaper(id){
 
 function run(){
   if(state.running)return;
-  if(state.task==="live"){
-    /* the live comparison step is not built yet; the plan above is real, the verdict is not */
-    $("results").innerHTML='<section class="sec" style="margin-top:48px"><p class="lead">The live comparison is not built yet. The papers and hardware matches above came from a real search. For a full result, ask one of the preset questions: resting heart rate, or the RBV threshold.</p></section>';
-    return;
-  }
   state.running=true;$("run").disabled=true;$("results").innerHTML="";
   state.inputs=collect();
+  if(state.task==="live"){runLive();return}
   animate($("steps2"),["Extract with quotes","Verify quotes","Compare to project","Rank features"],function(){
     state.running=false;$("run").disabled=false;renderResults();$("results").scrollIntoView({behavior:"smooth",block:"start"});
   });

@@ -51,15 +51,20 @@ def build_plan(question: str, hardware: List[str], progress: Progress) -> dict:
     progress.stage(1, "Search the literature, %d found" % len(found))
     if not found:
         raise llm.LLMError("No papers with abstracts were found for this question.")
-    listing = "\n".join("%d. %s (%s). %s" % (i + 1, p["title"], p["year"], p["abstract"][:350])
+    listing = "\n".join("%d. [%s] %s (%s). %s" % (i + 1, "full text" if p["pmcid"] else "abstract only",
+                                                  p["title"], p["year"], p["abstract"][:350])
                         for i, p in enumerate(found))
-    sel = llm.ask("select", "CLAIM: %s\n\nCandidate papers:\n%s\n\nPick the 3 to 5 papers most useful for judging "
-                  "this claim, most useful first. A paper is useful if it measured the same quantity or tested the "
-                  "same method, even with different hardware. Skip papers about unrelated topics. Only return an "
-                  "empty list if none of the papers relate to the claim at all." % (cl.claim, listing),
-                  Selection, system=SYSTEM)
-    keep = [i - 1 for i in sel.keep if 1 <= i <= len(found)]
-    chosen = [found[i] for i in dict.fromkeys(keep)][: int(os.getenv("MAX_PAPERS", "5"))]
+    sel = llm.ask("select", "CLAIM: %s\n\nCandidate papers:\n%s\n\nScore every paper for how useful it is for "
+                  "judging this claim. Hardware does not need to match: a paper that measured the same quantity "
+                  "with different hardware is just as useful. Judge by what the paper measured, not by which "
+                  "device names appear in its title." % (cl.claim, listing), Selection, system=SYSTEM)
+    rel = {s.n - 1: s.relevance for s in sel.scores if 1 <= s.n <= len(found)}
+    # code decides: best relevance first, full text before abstract-only, search order as the tiebreak
+    order = sorted(rel, key=lambda i: (-rel[i], 0 if found[i]["pmcid"] else 1, i))
+    limit = int(os.getenv("MAX_PAPERS", "5"))
+    chosen = [found[i] for i in order if rel[i] >= 2][:limit]
+    if len(chosen) < 3:  # too few direct hits: pad with same-topic papers, but never with unrelated ones
+        chosen += [found[i] for i in order if rel[i] == 1][: 3 - len(chosen)]
     if not chosen:
         raise llm.LLMError("None of the papers found were relevant enough to compare.")
     progress.stage(1, "Search the literature, %d relevant of %d" % (len(chosen), len(found)))

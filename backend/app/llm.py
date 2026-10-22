@@ -28,7 +28,7 @@ def _cache_dir() -> Path:
 
 
 def _model(tier: str) -> str:
-    main = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+    main = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     return os.getenv("GEMINI_MODEL_LITE", "gemini-3.5-flash-lite") if tier == "lite" else main
 
 
@@ -160,10 +160,10 @@ def ask(task: str, prompt: str, schema: Type[T], system: str = "", tier: str = "
     while tries < 2:  # a second pass only if the first reply failed validation
         try:
             resp = _post(model, body)
-        except Unavailable:
+        except (Unavailable, QuotaExhausted):
             if model == _model("lite"):
                 raise
-            model = _model("lite")  # overloaded: fall back to the lite model once
+            model = _model("lite")  # overloaded or this model's daily quota is gone: fall back to the lite model once
             body = make_body(model)
             continue
         tries += 1

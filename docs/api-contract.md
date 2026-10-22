@@ -19,7 +19,7 @@ Inside a paper:
 
 ## Endpoints
 
-Built: `POST /api/plan`, `GET /api/jobs/{id}`, `GET /api/llm-usage`, `GET /api/llm-test`. Not built yet: `POST /api/check`.
+Built: `POST /api/plan`, `GET /api/jobs/{id}`, `GET /api/llm-usage`, `GET /api/llm-test`. `POST /api/check` (built, returns `PAPERS` entries plus lead, actions and gaps).
 
 | Step in the UI | Endpoint | Returns |
 | --- | --- | --- |

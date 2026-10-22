@@ -93,13 +93,19 @@ class Checklist(BaseModel):
     claim: str = Field(description="The user's question restated as one testable claim")
     goal: str = Field(description="The user's improvement goal in one short sentence")
     dimensions: List[ChecklistDim] = Field(description="5 to 8 conditions that decide whether a published finding transfers")
-    search_queries: List[str] = Field(description="3 literature search queries using the terms papers would use. Exactly one names the user's device, and at least two name no device or brand, only the quantity, method and setting, because the most informative papers often used different hardware")
+    search_queries: List[str] = Field(description="3 literature search queries aimed at validation or accuracy studies of the claim's quantity. Each names the quantity, the reference method it was checked against, and the setting or population, e.g. 'fingertip photoplethysmography heart rate accuracy versus electrocardiogram at rest'. One query may name the user's device. At least two name no device or brand, because the most informative papers often used different hardware. Do not search for implementation topics such as algorithms or microcontrollers unless the claim is about them")
     questions: List[ChecklistQuestion] = Field(description="At most 4 clarifying questions, only for things the question and hardware list do not already answer")
     extra_hardware: List[ChecklistExtra] = Field(description="Hardware or data the project may need to add, can be empty")
 
 
+class PaperScore(BaseModel):
+    n: int = Field(description="The paper's number in the list")
+    relevance: int = Field(description="0 unrelated, 1 same topic but a different quantity, 2 measures the claim's quantity or tests its method, 3 a validation or accuracy study of the claim's quantity against a reference. Reviews, overviews and hardware build tutorials score at most 1")
+    reason: str = Field(description="Six words or fewer")
+
+
 class Selection(BaseModel):
-    keep: List[int] = Field(description="Numbers of the papers that directly study the claim, most relevant first")
+    scores: List[PaperScore] = Field(description="One entry for every paper in the list")
 
 
 class HwAssess(BaseModel):
@@ -108,3 +114,10 @@ class HwAssess(BaseModel):
     why: str = Field(description="One or two sentences")
     ask_q: str = Field(description="A question only if one missing detail would change the verdict, else empty")
     ask_ph: str = Field(description="Example answer, starting 'e.g.', or empty")
+
+
+# ---- step: report (capped results in, plain-language summary out) ----
+class Report(BaseModel):
+    lead: str = Field(description="Two sentences. Start with 'Yes.', 'No.', 'Partly.', 'Not as published.' or 'Not enough evidence.' then the reason")
+    actions: List[str] = Field(description="Exactly 3 concrete next steps, most important first")
+    gaps: List[str] = Field(description="2 to 4 things no paper in this set covers")

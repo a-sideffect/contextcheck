@@ -133,3 +133,9 @@ def get_text(paper: dict) -> Dict[str, str]:
     out = {"text": text[:MAX_TEXT], "text_source": how}
     f.write_text(json.dumps(out), encoding="utf-8")
     return out
+
+
+def cached_text(paper_id: str) -> Optional[Dict[str, str]]:
+    """Text saved by the plan step, or None if that paper was never fetched."""
+    f = _cache() / (paper_id + ".json")
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
