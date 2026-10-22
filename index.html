@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ContextCheck demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:oklch(0.972 0.006 265);
+  --surface:oklch(0.99 0.004 265);
+  --tint:oklch(0.94 0.012 265);
+  --ink:oklch(0.25 0.02 265);
+  --muted:oklch(0.48 0.02 265);
+  --line:oklch(0.87 0.012 265);
+  --accent:oklch(0.47 0.16 275);
+  --accent-ink:oklch(0.98 0.01 275);
+  --match:oklch(0.6 0.12 155);   --match-t:oklch(0.43 0.11 155);
+  --partial:oklch(0.76 0.13 82); --partial-t:oklch(0.46 0.1 68);
+  --differs:oklch(0.56 0.18 27); --differs-t:oklch(0.47 0.17 27);
+  --unknown:oklch(0.62 0.015 265); --unknown-t:oklch(0.46 0.015 265);
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:oklch(0.2 0.014 265); --surface:oklch(0.24 0.016 265); --tint:oklch(0.28 0.018 265);
+    --ink:oklch(0.93 0.01 265); --muted:oklch(0.72 0.015 265); --line:oklch(0.35 0.02 265);
+    --accent:oklch(0.76 0.12 275); --accent-ink:oklch(0.2 0.02 275);
+    --match:oklch(0.72 0.13 155);   --match-t:oklch(0.78 0.12 155);
+    --partial:oklch(0.8 0.12 82);   --partial-t:oklch(0.83 0.11 82);
+    --differs:oklch(0.7 0.15 27);   --differs-t:oklch(0.77 0.13 27);
+    --unknown:oklch(0.62 0.015 265);--unknown-t:oklch(0.75 0.015 265);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:oklch(0.2 0.014 265); --surface:oklch(0.24 0.016 265); --tint:oklch(0.28 0.018 265);
+  --ink:oklch(0.93 0.01 265); --muted:oklch(0.72 0.015 265); --line:oklch(0.35 0.02 265);
+  --accent:oklch(0.76 0.12 275); --accent-ink:oklch(0.2 0.02 275);
+  --match:oklch(0.72 0.13 155);   --match-t:oklch(0.78 0.12 155);
+  --partial:oklch(0.8 0.12 82);   --partial-t:oklch(0.83 0.11 82);
+  --differs:oklch(0.7 0.15 27);   --differs-t:oklch(0.77 0.13 27);
+  --unknown:oklch(0.62 0.015 265);--unknown-t:oklch(0.75 0.015 265);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;margin:0;letter-spacing:-.005em;line-height:1.12}
+h1{font-size:48px}
+h2{font-size:30px}
+h3{font-size:24px}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1140px;margin:0 auto;padding:28px 24px 96px}
+
+/* masthead */
+.mast{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:16px}
+.mark{display:flex;gap:3px}
+.mark .cell{width:9px;height:26px;border-width:1.2px;border-radius:3px;animation:none}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px;font-size:13.5px;color:var(--muted)}
+.ghost:hover{background:var(--tint)}
+.scale{height:10px;margin:18px 0 20px;
+  background:linear-gradient(90deg,var(--muted) 1px,transparent 1px) 0 100%/40px 10px repeat-x,
+             linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 100%/8px 5px repeat-x}
+.intro{font-family:var(--serif);font-size:24px;line-height:1.3;max-width:34em}
+.demo{margin-top:18px;font-size:13.5px;color:var(--muted);max-width:68ch}
+.demo .tag{margin-right:8px}
+
+/* tags and cells share one label vocabulary */
+.l-match,.v-adopt,.k-direct{--f:var(--match);--t:var(--match-t)}
+.l-partial,.v-test,.k-local{--f:var(--partial);--t:var(--partial-t)}
+.l-differs,.v-no,.k-not{--f:var(--differs);--t:var(--differs-t)}
+.l-unknown{--f:var(--unknown);--t:var(--unknown-t)}
+.k-conv{--f:var(--accent);--t:var(--accent)}
+.tag{display:inline-block;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600;line-height:1.5;white-space:nowrap;
+  color:var(--t);border:1px solid color-mix(in oklab,var(--f) 55%,transparent);background:color-mix(in oklab,var(--f) 12%,transparent)}
+.cell{display:block;height:34px;border-radius:6px;border:1.5px solid var(--f)}
+.cell.l-match{background:var(--f)}
+.cell.l-partial{background:linear-gradient(90deg,var(--f) 50%,transparent 50%)}
+.cell.l-differs{background:
+  linear-gradient(to top right,transparent calc(50% - 1px),var(--f) 50%,transparent calc(50% + 1px)),
+  linear-gradient(to bottom right,transparent calc(50% - 1px),var(--f) 50%,transparent calc(50% + 1px))}
+.cell.l-unknown{border-style:dashed;background:repeating-linear-gradient(135deg,color-mix(in oklab,var(--f) 40%,transparent) 0 2px,transparent 2px 6px)}
+
+/* setup */
+.setup{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;margin-top:56px}
+@media(max-width:900px){.setup{grid-template-columns:1fr;gap:40px}}
+.step-h{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.step-h span{font-family:var(--serif);font-size:22px;color:var(--muted)}
+.presets{border-top:1px solid var(--line)}
+.preset{display:grid;grid-template-columns:18px 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;
+  background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 10px;border-radius:0;min-height:48px}
+.preset:hover{background:var(--tint)}
+.preset[aria-pressed="true"]{background:var(--tint)}
+.preset b{font-weight:600;display:block}
+.preset small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.preset em{font-style:normal;font-size:12.5px;color:var(--muted);padding-top:2px}
+.rd{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);margin-top:3px;position:relative}
+.preset[aria-pressed="true"] .rd{border-color:var(--accent)}
+.preset[aria-pressed="true"] .rd::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.field input,.field textarea{width:100%;font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:7px 0;resize:vertical}
+.field input:focus,.field textarea:focus{outline:none;border-bottom-color:var(--accent);box-shadow:0 1px 0 var(--accent)}
+.prof{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+@media(max-width:600px){.prof{grid-template-columns:1fr}}
+.sub{color:var(--muted);font-size:13.5px;margin:-6px 0 14px;max-width:60ch}
+.runrow{display:flex;gap:18px;align-items:center;margin-top:34px}
+.run{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:12px 26px;min-height:46px;font-weight:600}
+.run:hover:not(:disabled){filter:brightness(1.08)}
+.run:disabled{opacity:.5;cursor:default}
+
+/* pipeline ruler */
+.ruler{list-style:none;display:flex;margin:0;padding:0;flex:1}
+.ruler:empty{display:none}
+.ruler li{flex:1;position:relative;padding-top:20px;font-size:12.5px;color:var(--muted);padding-right:8px}
+.ruler li::before{content:"";position:absolute;left:0;right:0;top:6px;height:2px;background:var(--line)}
+.ruler li::after{content:"";position:absolute;left:0;top:1px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid var(--line)}
+.ruler li.done{color:var(--ink)}
+.ruler li.done::before{background:var(--accent)}
+.ruler li.done::after{border-color:var(--accent);background:var(--accent)}
+.ruler li.now::after{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media(max-width:700px){.runrow{flex-direction:column;align-items:stretch}.ruler li{font-size:11px}}
+
+/* results */
+.sec{margin-top:72px}
+.sec > h2{margin-bottom:6px}
+.cap{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--muted);margin-bottom:18px;max-width:60ch}
+.empty{margin-top:72px;padding:40px 0;border-top:1px solid var(--line);color:var(--muted);font-family:var(--serif);font-size:22px}
+.lead{font-family:var(--serif);font-size:38px;line-height:1.15;max-width:22em}
+.nums{margin-top:14px;color:var(--muted);max-width:68ch}
+.act{margin:28px 0 0;padding:0;list-style:none;counter-reset:a;max-width:72ch;border-top:1px solid var(--line)}
+.act li{counter-increment:a;display:grid;grid-template-columns:34px 1fr;padding:12px 0;border-bottom:1px solid var(--line)}
+.act li::before{content:counter(a);font-family:var(--serif);font-size:22px;color:var(--accent);line-height:1.2}
+
+.lg{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px;font-size:13px;color:var(--muted)}
+.lg span{display:inline-flex;align-items:center;gap:8px}
+.lg .cell{width:22px;height:14px;border-radius:4px;border-width:1.2px}
+.mxw{overflow-x:auto;padding-bottom:6px}
+.mx{--cols:176px repeat(var(--n),minmax(74px,1fr)) 116px;min-width:calc(176px + var(--n) * 80px + 130px)}
+.mrow{display:grid;grid-template-columns:var(--cols);gap:8px;align-items:center;padding:7px 10px;border-radius:10px}
+.mhead{align-items:end;padding-bottom:10px;border-bottom:1px solid var(--line);border-radius:0}
+.mhead .d{font-size:12.5px;color:var(--muted);line-height:1.25}
+.mhead .d label{display:block;min-height:32px}
+.mhead input{width:100%;margin:6px 0 0;accent-color:var(--accent);height:22px}
+.mhead .wv{font-size:11.5px;color:var(--muted)}
+.mref{border-bottom:1px dashed var(--line);border-radius:0}
+.mref .pn{font-size:13px;font-weight:600}
+.mref .r{font-size:12px;line-height:1.3;color:var(--ink)}
+.prow{cursor:pointer;border:1.5px solid transparent}
+.prow:hover{background:var(--tint)}
+.prow[aria-pressed="true"]{background:var(--tint);border-color:var(--accent)}
+.pname b{display:block;font-weight:600;font-size:14px}
+.pname span{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
+.pscore{text-align:right}
+.pscore b{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1}
+.pscore small{display:block;font-size:11.5px;color:var(--muted)}
+.bar{display:block;height:4px;border-radius:2px;background:var(--line);margin:4px 0 3px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0);transition:transform .45s cubic-bezier(.22,1,.36,1)}
+.enter .cell{animation:cellin .5s cubic-bezier(.22,1,.36,1) both;animation-delay:var(--d)}
+@keyframes cellin{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+
+.detail{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:48px;margin-top:20px}
+@media(max-width:900px){.detail{grid-template-columns:1fr;gap:32px}}
+.detail h4{font-size:20px;margin-bottom:6px}
+.dl{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.dl li{display:grid;grid-template-columns:82px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dl li b{font-weight:600}
+.dl li p{color:var(--muted);font-size:14px;max-width:60ch}
+.ql li{grid-template-columns:1fr}
+.ql .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:3px}
+.dhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+.dhead p{color:var(--muted);font-size:14px}
+
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{font-weight:500;font-size:12.5px;color:var(--muted);text-align:left;padding:0 12px 8px 0;border-bottom:1px solid var(--line)}
+td{padding:12px 12px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+td.n{font-family:var(--serif);font-size:22px;color:var(--accent);width:36px;line-height:1.1}
+td b{font-weight:600}
+td small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;max-width:46ch}
+td .capnote{display:block;margin-top:4px;font-size:12px;color:var(--muted);max-width:26ch}
+td .sc{font-family:var(--serif);font-size:22px;line-height:1}
+.gaps{margin:14px 0 0;padding:0;list-style:none;max-width:70ch;border-top:1px solid var(--line)}
+.gaps li{padding:10px 0;border-bottom:1px solid var(--line)}
+.hide{display:none}
+@media(prefers-reduced-motion:reduce){
+  .enter .cell{animation:none}
+  .bar i{transition:none}
+  .ruler li.now::after{animation:none}
+}
+@media(max-width:600px){h1{font-size:38px}.lead{font-size:30px}.intro{font-size:21px}.wrap{padding:20px 16px 80px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><i class="cell l-match"></i><i class="cell l-match"></i><i class="cell l-partial"></i><i class="cell l-differs"></i><i class="cell l-unknown"></i></span>
+      <h1>ContextCheck</h1>
+    </div>
+    <button class="ghost" id="themeBtn" type="button">Switch theme</button>
+  </header>
+  <div class="scale" aria-hidden="true"></div>
+  <p class="intro">Does a published finding transfer to your project, and which of its features can improve it?</p>
+  <p class="demo"><span class="tag l-partial">Demo data</span>Results are canned from our project notes. Evidence lines are paraphrased; the live pipeline replaces them with quotes verified against the source text. The score is a heuristic, not a validated measure.</p>
+
+  <div class="setup">
+    <section aria-labelledby="s1">
+      <div class="step-h"><span>1</span><h3 id="s1">Choose a check</h3></div>
+      <div class="presets" id="chips"></div>
+    </section>
+    <section aria-labelledby="s2">
+      <div class="step-h"><span>2</span><h3 id="s2">Confirm the claim and your project</h3></div>
+      <div class="field"><label for="claim">Claim to check</label><textarea id="claim" rows="2"></textarea></div>
+      <div class="field"><label for="goal">Improvement goal</label><input id="goal" type="text"></div>
+      <p class="sub">Your project profile. Prefilled by the preset, editable.</p>
+      <div class="prof" id="profile"></div>
+    </section>
+  </div>
+
+  <div class="runrow">
+    <button class="run" id="run" type="button">Run check</button>
+    <ol class="ruler" id="steps" aria-live="polite"></ol>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+var LABELS={match:"Match",partial:"Partial",differs:"Differs",unknown:"Unknown"};
+var VAL={match:1,partial:0.5,differs:0};
+var CLS={direct:["Direct","k-direct"],conv:["Convertible","k-conv"],local:["Needs local calibration","k-local"],not:["Not comparable","k-not"]};
+var VERD={adopt:["Adopt","v-adopt"],test:["Test first","v-test"],no:["Do not adopt","v-no"]};
+
+var DIMS={
+ idh:[["Population",3],["Clinical setting",2],["Sensor and wavelengths",3],["Measurement site",1],["Outcome definition",3],["Protocol and timing",2],["Validation type",2],["Performance level",1]],
+ mat:[["Material and phase",3],["Method family",3],["Functional or technique",3],["Property definition",3],["Conditions",2],["Validation",2]]
+};
+var REF={
+ idh:["Maintenance HD","In-centre","MAX30102 red/IR","Hand","IDH, to define","To define","Own recordings","Reliable cheap alarm"],
+ mat:["Anatase TiO2","DFT","PBE","Band gap","To define","Compare with experiment"]
+};
+var PROFILES={
+ idh:[["Hardware","MAX30102 red/IR, about 100 Hz, ESP32-C3, BMI160 IMU, about 5 USD sensor"],["Population and setting","Hemodialysis patients, in-centre"],["Outcome","IDH (definition to be stated)"],["Signals and features","PI, HRV, dPVi, RBV"],["Constraints","No reference Hb, no blood-line sensor, low cost"],["Measured on our project","PPG Hb slope 0.02 to 0.05 vs 0.44 to 0.9 needed"]],
+ mat:[["Material","Anatase TiO2"],["Method","DFT, PBE functional"],["Property","Band gap in eV"],["Constraint","Laptop-scale compute"],["Measured on our project","PBE gap sits well below experiment"]]
+};
+
+var PAPERS={
+ mostafa:{short:"Mostafa 2019",src:"BMC Anesthesiology, DOI 10.1186/s12871-019-0917-1",
+  summary:"36 critically ill ICU adults with AKI, first intermittent HD session. Masimo Radical-7. Youden cut-off, no validation.",
+  dims:[["differs","ICU adults with AKI on their first HD session, not maintenance HD patients"],["partial","HD session, but run in the ICU rather than a routine outpatient centre"],["differs","Masimo Radical-7; our MAX30102 uses different optics, gain and filtering"],["unknown","Site not extracted in this preset"],["differs","IDH = 20 percent MAP fall needing norepinephrine"],["unknown","Timing of PI and HRV windows not extracted"],["differs","Cut-off derived on the same data, no validation cohort"],["partial","AUROC 0.721, modest"]],
+  qty:[["PI 1.8","local","Instrument","PI is a relative AC/DC ratio that depends on wavelength, LED current, gain and filtering. A MAX30102 value is not the Radical-7 value."],["HRV 24","local","Algorithm","Metric (RMSSD or SDNN) and window length decide what 24 means. Unknown until extracted, so the class is capped."]],
+  feat:[["PI as an IDH predictor","needs change","Our PI is on a different scale; threshold must be re-derived","Single cohort, n=36, no validation",3,0.5,0.35,"Medium","test","PI 1.8"],["HRV as an IDH predictor","needs change","Metric and window unknown; can be computed from our red/IR trace","Single cohort, n=36, no validation",2,0.5,0.35,"Medium","test","HRV 24"],["Derive the cut-off on our own data (ROC with Youden index)","yes","Method only; no hardware needed","Standard method, but their own result was not validated",3,1,0.6,"Medium","adopt",null]]},
+ li:{short:"Li 2026",src:"BMC Nephrology, DOI 10.1186/s12882-026-04883-4",
+  summary:"200 maintenance HD patients, 5 centres in Wuhu, China. Philips IntelliVue with Masimo SET. AUC 0.83, no external validation.",
+  dims:[["match","Maintenance HD patients, same group we target"],["match","In-centre HD, 5 centres"],["differs","Philips IntelliVue with Masimo SET, not red/IR MAX30102"],["unknown","Site not extracted in this preset"],["partial","IDH = SBP drop of 20 mmHg or more; our definition still to be stated"],["unknown","Timing of dPVi window not extracted"],["differs","No external validation"],["partial","Sensitivity 78.69, specificity 74.82, AUC 0.83"]],
+  qty:[["dPVi 23.53 percent","local","Instrument","Same name, but the value comes from a Philips and Masimo pipeline. Our own dPVi is a separate implementation of the idea."]],
+  feat:[["dPVi as an IDH predictor","needs change","Needs a proprietary pipeline; our version must be rebuilt and recalibrated","n=200, 5 centres, internal only",3,0.5,0.5,"High","test","dPVi 23.53 percent"],["Report sensitivity and specificity at the cut-off, not only AUC","yes","Reporting practice, no hardware needed","Clear practice, trivial to copy",1,1,0.6,"Low","adopt",null]]},
+ chaudhuri:{short:"Chaudhuri 2021",src:"BMC Nephrology, DOI 10.1186/s12882-021-02481-0",
+  summary:"ML model on blood-line optical sensor data, 616 in-centre patients. RBV 6.5 percent per hour is the model target.",
+  dims:[["match","In-centre HD patients, 616"],["match","In-centre HD"],["differs","Blood-line optical sensor, not a finger PPG sensor"],["differs","Blood line, not finger"],["differs","RBV rate is the ML prediction target, not a threshold checked against blood pressure"],["unknown","Protocol timing not extracted"],["unknown","Validation type not extracted"],["unknown","Performance not extracted"]],
+  qty:[["RBV 6.5 percent per hour","not","Instrument and site","RBV needs Hb change. Our own results: PPG Hb slope 0.02 to 0.05, about 0.44 to 0.9 needed. Our sensor cannot produce this number."]],
+  feat:[["RBV-rate alarm from PPG","no","Our red/IR PPG does not track Hb","Not applicable to our sensor",3,0,0.5,"High","adopt","RBV 6.5 percent per hour"],["ML model on short signal windows to predict a clinical target","yes","Method only; uses signals we already log","n=616, internal evidence",3,1,0.4,"High","test",null],["Blood-line optical sensor","no","Needs dialysis circuit access, breaks the low-cost goal","Strong evidence, wrong hardware",1,0,0.5,"High","adopt","RBV 6.5 percent per hour"]]},
+ tio2a:{short:"Placeholder A",src:"PBE anatase study. Placeholder entry, replaced by a real search result in the live run",
+  summary:"Computed PBE band gap of anatase TiO2.",
+  dims:[["match","Anatase TiO2"],["match","DFT"],["match","PBE functional"],["match","Kohn-Sham gap"],["partial","Cell and k-point settings differ from ours"],["partial","Compared with experiment, not independently reproduced"]],
+  qty:[["Band gap (PBE)","direct","None","Same functional and property definition. Directly comparable if settings are converged."]],
+  feat:[["Converged k-point and cutoff settings","yes","Settings only","Reported with convergence tests",2,1,0.6,"Low","adopt",null]]},
+ tio2b:{short:"Placeholder B",src:"Experimental optical gap. Placeholder entry, replaced by a real search result in the live run",
+  summary:"UV-Vis optical gap of anatase TiO2.",
+  dims:[["match","Anatase TiO2"],["differs","Experiment, not computation"],["differs","UV-Vis absorption, not DFT"],["partial","Optical gap, not Kohn-Sham gap"],["partial","Room temperature, sample dependent"],["match","Measured data"]],
+  qty:[["Band gap (experiment)","local","Method and definition","PBE gaps are known to sit below experimental gaps. Needs a correction or a higher-level calculation before comparing."]],
+  feat:[["Scissor correction fitted to experiment","yes","Post-processing step only","One material, one dataset",3,1,0.35,"Low","adopt","Band gap (experiment)"],["Hybrid functional recalculation","needs change","Heavier compute than a laptop run","Widely used, costly",3,0.5,0.6,"High","test",null]]}
+};
+
+var TASKS={
+ audit:{name:"Audit all three monitor thresholds",sub:"PI, HRV, dPVi, RBV against our sensor",domain:"idh",papers:["mostafa","li","chaudhuri"],
+  claim:"PI 1.8, HRV 24, dPVi 23.53 percent and RBV 6.5 percent per hour can be used as IDH alarm thresholds in our monitor.",
+  goal:"Improve IDH early-warning reliability with a cheap sensor",
+  lead:"None of the four thresholds transfers as published. RBV cannot be measured by our sensor at all; PI, HRV and dPVi need recalibration on our own data.",
+  actions:["Do not use RBV 6.5 percent per hour with the MAX30102. It is Not comparable, and our own data confirms the sensor cannot track Hb.","Treat PI, HRV and dPVi cut-offs as hypotheses. Re-derive each on our own recordings with an ROC analysis.","State our IDH definition first. Each paper uses a different one, so reported performance is not comparable across them."],
+  gaps:["No paper found that predicts IDH from red/IR PPG alone.","No head-to-head study of PI from a MAX30102 against a Masimo device.","No external validation of any of the three cut-offs."]},
+ rbv:{name:"Can RBV 6.5 percent per hour be used with our sensor?",sub:"One quantity, one clear answer",domain:"idh",papers:["chaudhuri"],
+  claim:"A relative blood volume fall above 6.5 percent per hour should trigger an IDH warning in our PPG monitor.",
+  goal:"Decide whether to keep an RBV alarm in the design",
+  lead:"No. RBV 6.5 percent per hour comes from a blood-line sensor and cannot be reproduced with red/IR PPG.",
+  actions:["Drop the RBV alarm from the PPG design. The quantity is Not comparable to what our sensor measures.","If RBV matters clinically, list it as future work needing a blood-line sensor.","Spend the effort on PI and HRV features, which our sensor can measure."],
+  gaps:["No evidence that any PPG device tracks RBV at this threshold.","Source paper uses RBV as an ML target, so the 6.5 percent per hour figure is not a validated BP threshold."]},
+ pi:{name:"Does PI 1.8 transfer to our MAX30102?",sub:"Same name, different instrument",domain:"idh",papers:["mostafa"],
+  claim:"A perfusion index below 1.8 predicts IDH in hemodialysis patients.",
+  goal:"Decide how to set our own PI cut-off",
+  lead:"Not as published. The 1.8 cut-off came from a different instrument, an ICU population and no validation. Derive our own.",
+  actions:["Do not copy 1.8. Collect our own PI traces and derive a cut-off with ROC analysis.","Record the LED current and gain settings with every session so PI is comparable across runs.","Report the IDH definition used, since the source used a norepinephrine-linked one."],
+  gaps:["No bridging study between Masimo PI and MAX30102 PI.","No validation cohort for the 1.8 cut-off."]},
+ tio2:{name:"Non-medical demo: PBE vs experimental band gap",sub:"Same tool, different field",domain:"mat",papers:["tio2a","tio2b"],
+  claim:"The PBE band gap of anatase TiO2 can be compared directly with the experimental gap.",
+  goal:"Report band gaps that readers can compare with experiment",
+  lead:"Not directly. The two gaps are different quantities. Label them, and correct the PBE value before comparing.",
+  actions:["Label PBE gaps as Kohn-Sham gaps and never place them next to experimental optical gaps without a note.","Add a scissor correction as a quick, labelled estimate.","Run a hybrid functional check on one structure to bound the error."],
+  gaps:["No cross-method benchmark for our exact structure in the placeholder set."]}
+};
+
+var state={task:"audit",weights:null,paper:null,running:false,shown:false};
+var $=function(id){return document.getElementById(id)};
+var EMPTY='<p class="empty">Results appear here. Choose a check, then press Run check.</p>';
+
+function defaultWeights(){return DIMS[TASKS[state.task].domain].map(function(d){return d[1]})}
+
+function score(p){
+  var w=state.weights,num=0,den=0,all=0,i;
+  for(i=0;i<p.dims.length;i++){
+    all+=w[i];
+    if(p.dims[i][0]!=="unknown"){den+=w[i];num+=w[i]*VAL[p.dims[i][0]]}
+  }
+  return {s:den?Math.round(num/den*100):0,c:all?Math.round(den/all*100):0,unk:p.dims.filter(function(d){return d[0]==="unknown"}).length};
+}
+function qcls(p,name){var q=p.qty.filter(function(x){return x[0]===name})[0];return q?q[1]:null}
+function cap(base,cls){
+  if(cls==="not")return "no";
+  if(cls==="local"&&base==="adopt")return "test";
+  return base;
+}
+function rank(f){return f[4]*f[5]*f[6]}
+
+function renderChips(){
+  $("chips").innerHTML=Object.keys(TASKS).map(function(k){
+    var n=TASKS[k].papers.length;
+    return '<button type="button" class="preset" data-task="'+k+'" aria-pressed="'+(k===state.task)+'"><span class="rd"></span><span><b>'+TASKS[k].name+'</b><small>'+TASKS[k].sub+'</small></span><em>'+n+' paper'+(n>1?'s':'')+'</em></button>'}).join("");
+}
+function renderProfile(){
+  var t=TASKS[state.task];
+  $("profile").innerHTML=PROFILES[t.domain].map(function(r,i){
+    return '<div class="field"><label for="pf'+i+'">'+r[0]+'</label><textarea id="pf'+i+'" rows="2">'+r[1]+'</textarea></div>'}).join("");
+}
+function setTask(k){
+  state.task=k;state.weights=defaultWeights();state.paper=null;state.shown=false;
+  $("results").innerHTML=EMPTY;$("steps").innerHTML="";
+  $("claim").value=TASKS[k].claim;$("goal").value=TASKS[k].goal;
+  renderChips();renderProfile();
+}
+
+var LEGEND='<div class="lg"><span><i class="cell l-match"></i>Match</span><span><i class="cell l-partial"></i>Partial</span><span><i class="cell l-differs"></i>Differs</span><span><i class="cell l-unknown"></i>Unknown, left out of the score and lowers confidence</span></div>';
+
+function renderResults(){
+  var t=TASKS[state.task],ids=t.papers,dn=DIMS[t.domain],n=dn.length,h='';
+  if(ids.indexOf(state.paper)<0)state.paper=ids[0];
+
+  h+='<section class="sec" style="margin-top:64px"><p class="lead">'+t.lead+'</p><p class="nums" id="nums"></p>'
+    +'<ol class="act">'+t.actions.map(function(a){return '<li><span>'+a+'</span></li>'}).join('')+'</ol></section>';
+
+  h+='<section class="sec"><h2>Fit by dimension</h2><p class="cap">Fig. 1. Each paper against your project, one cell per dimension. Drag a weight to change how much a dimension counts. Select a paper for its evidence.</p>'+LEGEND
+    +'<div class="mxw"><div class="mx enter" style="--n:'+n+'">'
+    +'<div class="mrow mhead"><div></div>'+dn.map(function(d,i){
+        return '<div class="d"><label for="w'+i+'">'+d[0]+'</label><input id="w'+i+'" data-w="'+i+'" type="range" min="0" max="5" step="1" value="'+state.weights[i]+'"><span class="wv">weight <span id="wv'+i+'">'+state.weights[i]+'</span></span></div>'}).join('')
+      +'<div class="d" style="text-align:right">Closeness</div></div>'
+    +'<div class="mrow mref"><div class="pn">Your project</div>'+REF[t.domain].map(function(r){return '<div class="r">'+r+'</div>'}).join('')+'<div></div></div>'
+    +ids.map(function(id,r){
+        var p=PAPERS[id];
+        return '<div class="mrow prow" role="button" tabindex="0" data-paper="'+id+'" aria-pressed="'+(id===state.paper)+'"><div class="pname"><b>'+p.short+'</b><span>'+p.src.split(",")[0]+'</span></div>'
+          +p.dims.map(function(d,i){return '<i class="cell l-'+d[0]+'" style="--d:'+((r*n+i)*38)+'ms" title="'+dn[i][0]+': '+LABELS[d[0]]+'. '+d[1]+'"></i>'}).join('')
+          +'<div class="pscore"><b id="sc-'+id+'">0</b><span class="bar"><i id="bar-'+id+'"></i></span><small id="cf-'+id+'"></small></div></div>'}).join('')
+    +'</div></div></section>';
+
+  h+='<section class="sec" id="detail"></section>';
+
+  var L=[];ids.forEach(function(id){PAPERS[id].feat.forEach(function(f){L.push({id:id,p:PAPERS[id],f:f})})});
+  L.sort(function(a,b){return rank(b.f)-rank(a.f)});
+  h+='<section class="sec"><h2>Transfer ranking</h2><p class="cap">Table 1. Features ranked by benefit x feasibility x evidence. A verdict is capped when the quantity behind it is Not comparable or needs local calibration.</p>'
+    +'<div class="tw"><table><thead><tr><th></th><th>Feature</th><th>Verdict</th><th>Evidence</th><th>Effort</th><th>Score</th></tr></thead><tbody>'
+    +L.map(function(x,i){
+        var f=x.f,cls=f[9]?qcls(x.p,f[9]):null,v=cap(f[8],cls),capped=v!==f[8];
+        return '<tr><td class="n">'+(i+1)+'</td><td><b>'+f[0]+'</b><small>'+x.p.short+'. Hardware: '+f[1]+'. '+f[2]+'</small></td>'
+          +'<td><span class="tag '+VERD[v][1]+'">'+VERD[v][0]+'</span>'+(capped?'<span class="capnote">Capped: quantity is '+CLS[cls][0]+'</span>':'')+'</td>'
+          +'<td>'+f[3]+'</td><td>'+f[7]+'</td><td><span class="sc">'+rank(f).toFixed(2)+'</span><span class="bar" style="width:70px"><i style="transform:scaleX('+Math.min(rank(f)/1.8,1)+')"></i></span></td></tr>'}).join('')
+    +'</tbody></table></div></section>';
+
+  h+='<section class="sec"><h2>Gaps</h2><p class="cap">What no paper in this set covers.</p><ul class="gaps">'+t.gaps.map(function(g){return '<li>'+g+'</li>'}).join('')+'</ul></section>';
+
+  $("results").innerHTML=h;
+  updateScores();
+  requestAnimationFrame(function(){requestAnimationFrame(updateBars)});
+}
+
+function updateBars(){
+  TASKS[state.task].papers.forEach(function(id){
+    var s=score(PAPERS[id]).s,b=$("bar-"+id);if(b)b.style.transform="scaleX("+(s/100)+")";
+  });
+}
+function updateScores(){
+  var t=TASKS[state.task],sum=0,cs=0,unk=0,k=t.papers.length;
+  t.papers.forEach(function(id){
+    var s=score(PAPERS[id]);sum+=s.s;cs+=s.c;unk+=s.unk;
+    $("sc-"+id).textContent=s.s;$("cf-"+id).textContent=s.c+"% confidence";
+  });
+  $("nums").textContent="Closeness "+Math.round(sum/k)+" of 100 at "+Math.round(cs/k)+" percent confidence, mean of "+k+" paper"+(k>1?"s":"")+", "+unk+" dimensions unknown.";
+  updateBars();
+  renderDetail();
+}
+function renderDetail(){
+  var t=TASKS[state.task],p=PAPERS[state.paper],dn=DIMS[t.domain],s=score(p);
+  var usable=p.feat.filter(function(f){return cap(f[8],f[9]?qcls(p,f[9]):null)!=="no"}).length;
+  $("detail").innerHTML=
+   '<div class="dhead"><h2>'+p.short+'</h2><p>'+p.src+'</p></div>'
+   +'<p class="cap" style="margin-top:6px">'+p.summary+' Closeness '+s.s+' at '+s.c+' percent confidence. '+usable+' of '+p.feat.length+' features usable.</p>'
+   +'<div class="detail"><div><h4>Closeness by dimension</h4><ul class="dl">'
+   +p.dims.map(function(d,i){return '<li><span><span class="tag l-'+d[0]+'">'+LABELS[d[0]]+'</span></span><div><b>'+dn[i][0]+'</b><p>'+d[1]+'</p></div></li>'}).join('')
+   +'</ul></div><div><h4>Comparability of each quantity</h4><ul class="dl ql">'
+   +p.qty.map(function(q){return '<li><div class="top"><b>'+q[0]+'</b><span class="tag '+CLS[q[1]][1]+'">'+CLS[q[1]][0]+'</span></div><p>Broken on: '+q[2]+'. '+q[3]+'</p></li>'}).join('')
+   +'</ul><p class="cap" style="margin-top:14px">Class is set by rule. A differing instrument, algorithm or definition drops it below Direct. Unknown axes cap it.</p></div></div>';
+}
+function selectPaper(id){
+  state.paper=id;
+  var rows=document.querySelectorAll(".prow");
+  for(var i=0;i<rows.length;i++)rows[i].setAttribute("aria-pressed",rows[i].getAttribute("data-paper")===id?"true":"false");
+  renderDetail();
+}
+
+function run(){
+  if(state.running)return;state.running=true;$("run").disabled=true;$("results").innerHTML="";
+  var t=TASKS[state.task],k=t.papers.length;
+  var S=["Parse claim","Search OpenAlex, "+k+" preset","Extract with quotes","Verify quotes","Compare to project"];
+  $("steps").innerHTML=S.map(function(s){return '<li>'+s+'</li>'}).join('');
+  var items=$("steps").children,i=0;
+  (function tick(){
+    if(i>0)items[i-1].classList.remove("now");
+    if(i<items.length){items[i].classList.add("done","now");i++;setTimeout(tick,480)}
+    else{state.running=false;$("run").disabled=false;state.shown=true;renderResults();$("results").scrollIntoView({behavior:"smooth",block:"start"})}
+  })();
+}
+
+document.addEventListener("click",function(e){
+  var c=e.target.closest("[data-task]");if(c){setTask(c.getAttribute("data-task"));return}
+  var r=e.target.closest("[data-paper]");if(r){selectPaper(r.getAttribute("data-paper"))}
+});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"||e.key===" "){
+    var r=e.target.closest&&e.target.closest(".prow");
+    if(r){e.preventDefault();selectPaper(r.getAttribute("data-paper"))}
+  }
+});
+document.addEventListener("input",function(e){
+  var i=e.target.getAttribute&&e.target.getAttribute("data-w");
+  if(i!==null&&i!==undefined){state.weights[+i]=+e.target.value;$("wv"+i).textContent=e.target.value;updateScores()}
+});
+$("run").addEventListener("click",run);
+$("themeBtn").addEventListener("click",function(){
+  var r=document.documentElement,dark=r.getAttribute("data-theme")==="dark"||(!r.getAttribute("data-theme")&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+  r.setAttribute("data-theme",dark?"light":"dark");
+});
+setTask("audit");
+</script>
+</body>
+</html>
